@@ -70,7 +70,7 @@
 				playerVel.x += this.xAccel;
 			}
 
-			if(this.jumpingEnabled){ // need more drag and acceleration
+			if(this.jumpingEnabled){
 				if(inputs.up.isDown && (this.player.body.onFloor() || this.player.body.touching.down)){
 					playerVel.y -= this.yAccel;
 				}
@@ -78,7 +78,7 @@
 				if(inputs.up.isDown){
 					playerVel.y -= this.yAccel;
 				}
-			} else{ // no jumping and no flying means up and down work like normal // need more drag and acceleration
+			} else{ // no jumping and no flying means up and down work like normal
 				if(inputs.up.isDown){
 					playerVel.y -= this.yAccel;
 				}
@@ -91,9 +91,6 @@
 
 	var helpers = {
 		figureOutPath: function(spriteName){
-			if(typeof spriteName !== 'string' && spriteName.length > 0){
-				return 'invalid name';
-			}
 
 			var hasExtension = spriteName.lastIndexOf('.') > 0;
 			var hasSlash = spriteName.indexOf('/') !== -1;
@@ -104,10 +101,18 @@
 				spriteName = spritePath + spriteName;
 			}
 			return spriteName;
+		},
+
+		isString: function(str){
+			if(typeof str === 'string' && str.length > 0){
+				return true;
+			}
+			return false; // TODO: Display some sort of useful error
 		}
 	};
 	
 	function makePlayerSprite(spriteName, spriteWidth, spriteHeight, optX, optY){
+		if(!helpers.isString(spriteName)){return {};}
 		var more = {
 			player: null,
 			enableJumping: function(){
@@ -142,6 +147,19 @@
 		return more;
 	}
 
+	function addBackground(spriteName, optX, optY){
+		if(!helpers.isString(spriteName)){return {};}
+		if(spriteName[0] === '#' && (spriteName.length === 4 || spriteName.length === 7)){
+			setBackgroundColor(spriteName);
+		} else{
+			addBackgroundSprite(spriteName, optX, optY);
+		}
+	}
+	function setBackgroundColor(colorValue){
+		creates.push(function(){
+			game.stage.backgroundColor = colorValue;
+		});
+	}
 	function addBackgroundSprite(spriteName, optX, optY){
 		preloads.push(function(){
 			game.load.image(spriteName, helpers.figureOutPath(spriteName));
@@ -191,7 +209,7 @@
 	}
 
 	window.player = makePlayerSprite;
-	window.background = addBackgroundSprite;
+	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
 	window.gravity = enableGravity;
 	window.platform = addPlatformSprite;
