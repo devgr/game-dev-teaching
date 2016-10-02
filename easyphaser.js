@@ -1,4 +1,5 @@
 (function(){
+	'use strict';
 	var game;
 	var spritePath = './sprites/';
 	var spriteExt = '.png';
@@ -14,24 +15,95 @@
 
 	var usesGravity = [];
 
-	function figureOutPath(spriteName){
-		if(typeof spriteName !== 'string' && spriteName.length > 0){
-			return 'invalid name';
-		}
+	var controlSystem = {
+		inputs: {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}}, // dummy initial values
+		player: null,
+		platformGroup: null, // for checking colisions
+		flyingEnabled: false, 
+		jumpingEnabled: false,
 
-		var hasExtension = spriteName.lastIndexOf('.') > 0;
-		var hasSlash = spriteName.indexOf('/') !== -1;
-		if(!hasExtension){
-			spriteName = spriteName + spriteExt;
+		listenToArrowKeys: function(){
+			this.inputs.up = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+			this.inputs.down = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+			this.inputs.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+			this.inputs.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+		},
+
+		update: function(){
+
+			if(this.platformGroup){
+				game.physics.arcade.collide(this.player, this.platformGroup);
+			}
+
+			var inputs = this.inputs;
+			var playerVel = this.player.body.velocity;
+
+			if(inputs.left.isDown){
+				playerVel.x -= 4;
+			}
+			if(inputs.right.isDown){
+				playerVel.x += 4;
+			}
+
+			if(this.jumpingEnabled){ // need more drag and acceleration
+				if(inputs.up.isDown && (this.player.body.onFloor() || this.player.body.touching.down)){
+					playerVel.y -= 200;
+				}
+			} else if(this.flyingEnabled){
+				if(inputs.up.isDown){
+					playerVel.y -= 8;
+				}
+			} else{ // no jumping and no flying means up and down work like normal // need more drag and acceleration
+				if(inputs.up.isDown){
+					playerVel.y -= 4;
+				}
+				if(inputs.down.isDown){
+					playerVel.y += 4;
+				}
+			}
 		}
-		if(!hasSlash){
-			spriteName = spritePath + spriteName;
+	};
+
+	var helpers = {
+		figureOutPath: function(spriteName){
+			if(typeof spriteName !== 'string' && spriteName.length > 0){
+				return 'invalid name';
+			}
+
+			var hasExtension = spriteName.lastIndexOf('.') > 0;
+			var hasSlash = spriteName.indexOf('/') !== -1;
+			if(!hasExtension){
+				spriteName = spriteName + spriteExt;
+			}
+			if(!hasSlash){
+				spriteName = spritePath + spriteName;
+			}
+			return spriteName;
 		}
-		return spriteName;
-	}
+	};
+	
 	function makePlayerSprite(spriteName, spriteWidth, spriteHeight, optX, optY){
+		var more = {
+			player: null,
+			enableJumping: function(){
+				controlSystem.jumpingEnabled = true;
+				endCreates.push(function(){
+					more.player.body.gravity.y = 100;
+				});
+				return more;
+			},
+			enableGravity: function(){ 
+				// same thing as other enableGravity(), but only for the player
+				controlSystem.flyingEnabled = true; // fly by default, but jumping takes priority
+				endCreates.push(function(){
+					more.player.body.gravity.y = 100;
+				});
+				return more;
+			}
+		};
+
 		preloads.push(function(){
-			game.load.spritesheet(spriteName, figureOutPath(spriteName), spriteWidth, spriteHeight);
+			game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
 		});
 		creates.push(function(){
 			var player = game.add.sprite(optX || 0, optY || 0, spriteName);
@@ -47,11 +119,17 @@
 				player.y = optY || 0;
 				// also save its initial position
 			});
+
+			controlSystem.player = player;
+			more.player = player;
 		});
+
+		return more;
 	}
+
 	function addBackgroundSprite(spriteName, optX, optY){
 		preloads.push(function(){
-			game.load.image(spriteName, figureOutPath(spriteName));
+			game.load.image(spriteName, helpers.figureOutPath(spriteName));
 		});
 		creates.push(function(){
 			var sprite = game.add.sprite(optX || 0, optY || 0, spriteName);
@@ -59,11 +137,34 @@
 		});
 	}
 
+	function addPlatformSprite(spriteName, optX, optY){
+		preloads.push(function(){
+			game.load.image(spriteName, helpers.figureOutPath(spriteName));
+		});
+		creates.push(function(){
+			if(!controlSystem.platformGroup){
+				controlSystem.platformGroup = game.add.physicsGroup();
+				endCreates.push(function(){
+					controlSystem.platformGroup.setAll('body.immovable', true);
+				});
+			}
+			var sprite = controlSystem.platformGroup.create(optX || 0, optY || 0, spriteName);
+			sprite.anchor.setTo(0.5, 0.5);
+			// need to add animation ability
+		});
+	}
+
 	function useArrowKeys(){
-		
+		creates.push(function(){
+			controlSystem.listenToArrowKeys();
+		});
+		updates.push(function(){
+			controlSystem.update(); // wrapped in a function so that update has the right context
+		});
 	}
 
 	function enableGravity(){
+		controlSystem.flyingEnabled = true;
 		endCreates.push(function(){
 			for(var i = 0, len = usesGravity.length; i < len; i++){
 				usesGravity[i].body.gravity.y = 100;
@@ -76,6 +177,7 @@
 	window.background = addBackgroundSprite;
 	window.arrowkeys = useArrowKeys;
 	window.gravity = enableGravity;
+	window.platform = addPlatformSprite;
 
 	if(window.level1 && typeof window.level1 === "function"){
 		try{
@@ -98,7 +200,7 @@
 		game.camera.y = 0 - screenHeight / 2;
 
 		game.physics.startSystem(Phaser.Physics.ARCADE); // always need physics
-		
+
 		for(var i = 0, len = creates.length; i < len; i++){
 			creates[i]();
 		}
