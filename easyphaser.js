@@ -21,12 +21,37 @@
 		platformGroup: null, // for checking colisions
 		flyingEnabled: false, 
 		jumpingEnabled: false,
+		xAccel: 0,
+		yAccel: 0,
 
 		listenToArrowKeys: function(){
 			this.inputs.up = game.input.keyboard.addKey(Phaser.Keyboard.UP);
 			this.inputs.down = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
 			this.inputs.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
 			this.inputs.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+		},
+
+		setSpeeds: function(){
+			// based on whether moving, flying, or sidescrolling, set the correct accelerations
+			var body = this.player.body;
+			if(this.jumpingEnabled){ // side scroller feel, very quick
+				body.gravity.y = 300;
+				body.drag = new Phaser.Point(300, 0);
+				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(200, 300);});
+				this.xAccel = 30;
+				this.yAccel = 250;
+			} else if(this.flyingEnabled){ // slower, gravity based
+				body.gravity.y = 100;
+				body.drag = new Phaser.Point(50, 0);
+				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(250, 250);});
+				this.xAccel = 4;
+				this.yAccel = 7;
+			} else{ // can move in all directions
+				body.drag = new Phaser.Point(500, 500);
+				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(100, 100);});
+				this.xAccel = 50;
+				this.yAccel = 50;
+			}
 		},
 
 		update: function(){
@@ -39,26 +64,26 @@
 			var playerVel = this.player.body.velocity;
 
 			if(inputs.left.isDown){
-				playerVel.x -= 4;
+				playerVel.x -= this.xAccel;
 			}
 			if(inputs.right.isDown){
-				playerVel.x += 4;
+				playerVel.x += this.xAccel;
 			}
 
 			if(this.jumpingEnabled){ // need more drag and acceleration
 				if(inputs.up.isDown && (this.player.body.onFloor() || this.player.body.touching.down)){
-					playerVel.y -= 200;
+					playerVel.y -= this.yAccel;
 				}
 			} else if(this.flyingEnabled){
 				if(inputs.up.isDown){
-					playerVel.y -= 8;
+					playerVel.y -= this.yAccel;
 				}
 			} else{ // no jumping and no flying means up and down work like normal // need more drag and acceleration
 				if(inputs.up.isDown){
-					playerVel.y -= 4;
+					playerVel.y -= this.yAccel;
 				}
 				if(inputs.down.isDown){
-					playerVel.y += 4;
+					playerVel.y += this.yAccel;
 				}
 			}
 		}
@@ -87,17 +112,10 @@
 			player: null,
 			enableJumping: function(){
 				controlSystem.jumpingEnabled = true;
-				endCreates.push(function(){
-					more.player.body.gravity.y = 100;
-				});
 				return more;
 			},
-			enableGravity: function(){ 
-				// same thing as other enableGravity(), but only for the player
-				controlSystem.flyingEnabled = true; // fly by default, but jumping takes priority
-				endCreates.push(function(){
-					more.player.body.gravity.y = 100;
-				});
+			enableFlying: function(){ 
+				controlSystem.flyingEnabled = true;
 				return more;
 			}
 		};
@@ -109,10 +127,7 @@
 			var player = game.add.sprite(optX || 0, optY || 0, spriteName);
 			player.anchor.setTo(0.5, 0.5);
 			game.physics.arcade.enable(player); // enable physics and drag
-			player.body.drag = new Phaser.Point(50, 50); 
-			player.body.maxVelocity = new Phaser.Point(300, 300);
 			player.body.collideWorldBounds = true;
-			usesGravity.push(player); // might have gravity set on it later
 
 			afterCreates.push(function(){
 				player.x = optX || 0; // not sure why this is needed (why anchor doesn't seem to work right away)
@@ -161,6 +176,9 @@
 		updates.push(function(){
 			controlSystem.update(); // wrapped in a function so that update has the right context
 		});
+		endCreates.push(function(){
+			controlSystem.setSpeeds();
+		});
 	}
 
 	function enableGravity(){
@@ -168,7 +186,6 @@
 		endCreates.push(function(){
 			for(var i = 0, len = usesGravity.length; i < len; i++){
 				usesGravity[i].body.gravity.y = 100;
-				usesGravity[i].body.drag = new Phaser.Point(50, 0); // get rid of vertical drag
 			}
 		});
 	}
