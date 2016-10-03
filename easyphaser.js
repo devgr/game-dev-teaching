@@ -1,3 +1,9 @@
+// TODO: start and finish
+// TODO: player carry box
+// TODO: show text
+// TODO: show text at finish
+// TODO: smooth camera follow
+// TODO: parallax effect for background
 (function(){
 	'use strict';
 	var game;
@@ -93,11 +99,43 @@
 	var cameraSystem = {
 		centerOn: null, // sprite to follow with the camera
 		normalFollow: function(){
-			endCreates.push(function(){
-				game.camera.follow(cameraSystem.centerOn);
-			});
+			game.camera.follow(this.centerOn);
 		}
 		// TODO: add smooth follow algorithm
+	};
+
+	var spawnSystem = {
+		// basically just specifies where the player is going start.
+		startX: 0,
+		startY: 0,
+		forSure: false, // location set from start function has priority over player function
+		player: null,
+		movePlayer: function(){
+			if(this.player){
+				this.player.x = this.startX;
+				this.player.y = this.startY;
+			}
+		}
+	};
+
+	var overlapSystem = {
+		// allows for callbacks that check for the player touching something else
+		player: null,
+		overlaps: [],
+		initialized: false,
+		initialize: function(){
+			if(!this.initialized){
+				updates.push(function(){
+					overlapSystem.update();
+				});
+				this.initialized = true;
+			}
+		},
+		update: function(){
+			for(var i = 0, len = this.overlaps.length; i < len; i++){
+				this.overlaps[i](this.player);
+			}
+		}
 	};
 
 	var helpers = {
@@ -147,15 +185,16 @@
 			player.anchor.setTo(0.5, 0.5);
 			game.physics.arcade.enable(player); // enable physics and drag
 			player.body.collideWorldBounds = true;
+			
+			if(!spawnSystem.forSure){
+				spawnSystem.startX = optX || 0;
+				spawnSystem.startY = optY || 0;
+			}
 
-			afterCreates.push(function(){
-				player.x = optX || 0; // not sure why this is needed (why anchor doesn't seem to work right away)
-				player.y = optY || 0;
-				// also save its initial position
-			});
-
+			spawnSystem.player = player;
 			controlSystem.player = player;
 			cameraSystem.centerOn = player;
+			overlapSystem.player = player;
 			more.player = player;
 		});
 
@@ -248,7 +287,66 @@
 	}
 
 	function cameraFollowPlayer(){
-		cameraSystem.normalFollow();
+		endCreates.push(function(){
+			cameraSystem.normalFollow();
+		});
+	}
+
+	function setStartLocation(x, y){
+		spawnSystem.forSure = true;
+		spawnSystem.startX = x;
+		spawnSystem.startY = y;
+	}
+
+	function setFinishBox(x, y, optSize){
+		var more = {
+			sprite: null,
+			messageText: '!',
+			messageX: 25,
+			messageY: 25,
+			debug: function(){
+				renders.push(function(){
+					game.debug.body(more.sprite);
+				});
+				return more;
+			},
+			message: function(text, x, y){
+				more.messageText = text;
+				more.messageX = x;
+				more.messageY = y;
+				return more;
+			}
+		};
+
+		optSize = optSize ? optSize : 10;
+		var helperSpriteName = 'empty';
+		preloads.push(function(){
+			if(!preloadedNames.empty){
+				game.load.image(helperSpriteName, helpers.figureOutPath(helperSpriteName));
+				preloadedNames.empty = true;
+			}
+		});
+		creates.push(function(){
+			var helperSprite = game.add.sprite(helperSpriteName, x, y);
+			game.physics.arcade.enable(helperSprite);
+			helperSprite.body.setSize(optSize, optSize, x - (optSize / 2), y - (optSize / 2));
+			more.sprite = helperSprite;
+		});
+
+		var youGotThere = false;
+		overlapSystem.initialize();
+		overlapSystem.overlaps.push(function(player){
+			game.physics.arcade.overlap(player, more.sprite, function(){
+				if(!youGotThere){
+					youGotThere = true;
+					renders.push(function(){
+						game.debug.text(more.messageText, more.messageX, more.messageY);
+					});
+				}
+			});
+		});
+
+		return more;
 	}
 
 	window.player = makePlayerSprite;
@@ -257,6 +355,8 @@
 	window.gravity = enableGravity;
 	window.platform = addPlatformSprite;
 	window.coolcamera = cameraFollowPlayer;
+	window.start = setStartLocation;
+	window.finish = setFinishBox;
 
 	if(window.level1 && typeof window.level1 === "function"){
 		try{
@@ -286,6 +386,9 @@
 		for(i = 0, len = endCreates.length; i < len; i++){
 			endCreates[i]();
 		}
+
+		afterCreates.push(function(){spawnSystem.movePlayer();}); // always have to start the player at the right spot
+
 		window.setTimeout(afterCreate, 0);
 	}
 	function afterCreate(){
