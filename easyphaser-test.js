@@ -5,5 +5,5 @@ function level1(){
 	player('rocketman', 64, 64);//.enableJumping();
 	arrowkeys();
 	gravity();
-	platform('floating_platform', 0, 150);
+	platform('floating_platform', 80, 36, 0, 125).animation(10);
 }

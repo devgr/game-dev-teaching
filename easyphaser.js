@@ -177,10 +177,26 @@
 		});
 	}
 
-	function addPlatformSprite(spriteName, optX, optY){
+	function addPlatformSprite(spriteName, spriteWidth, spriteHeight, optX, optY){
+		if(!helpers.isString(spriteName)){return {};}
+		var more = {
+			sprite: null,
+			animation: function(optFramesPerSecond, optIsLoop, optAnimationName){
+				optFramesPerSecond = optFramesPerSecond ? optFramesPerSecond : 15;
+				optIsLoop = optIsLoop === undefined ? true : !!optIsLoop; // isn't javascript great?...
+				optAnimationName = optAnimationName ? optAnimationName : 'anim1';
+				endCreates.push(function(){
+					more.sprite.animations.add(optAnimationName);
+					more.sprite.animations.play(optAnimationName, optFramesPerSecond, optIsLoop);
+				});
+				return more;
+			}
+			// TODO: Add the ability to have multiple animations and to switch between them
+		};
+
 		preloads.push(function(){
 			if(!preloadedNames[spriteName]){
-				game.load.image(spriteName, helpers.figureOutPath(spriteName));
+				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
 				preloadedNames[spriteName] = true;
 			}
 		});
@@ -193,8 +209,10 @@
 			}
 			var sprite = controlSystem.platformGroup.create(optX || 0, optY || 0, spriteName);
 			sprite.anchor.setTo(0.5, 0.5);
-			// need to add animation ability
+			more.sprite = sprite;
 		});
+
+		return more;
 	}
 
 	function useArrowKeys(){
