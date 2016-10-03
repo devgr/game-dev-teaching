@@ -14,6 +14,7 @@
 	var renders = [];
 
 	var usesGravity = [];
+	var preloadedNames = {};
 
 	var controlSystem = {
 		inputs: {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}}, // dummy initial values
@@ -126,7 +127,10 @@
 		};
 
 		preloads.push(function(){
-			game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
+			if(!preloadedNames[spriteName]){
+				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
+				preloadedNames[spriteName] = true;
+			}
 		});
 		creates.push(function(){
 			var player = game.add.sprite(optX || 0, optY || 0, spriteName);
@@ -162,7 +166,10 @@
 	}
 	function addBackgroundSprite(spriteName, optX, optY){
 		preloads.push(function(){
-			game.load.image(spriteName, helpers.figureOutPath(spriteName));
+			if(!preloadedNames[spriteName]){
+				game.load.image(spriteName, helpers.figureOutPath(spriteName));
+				preloadedNames[spriteName] = true;
+			}
 		});
 		creates.push(function(){
 			var sprite = game.add.sprite(optX || 0, optY || 0, spriteName);
@@ -172,7 +179,10 @@
 
 	function addPlatformSprite(spriteName, optX, optY){
 		preloads.push(function(){
-			game.load.image(spriteName, helpers.figureOutPath(spriteName));
+			if(!preloadedNames[spriteName]){
+				game.load.image(spriteName, helpers.figureOutPath(spriteName));
+				preloadedNames[spriteName] = true;
+			}
 		});
 		creates.push(function(){
 			if(!controlSystem.platformGroup){
