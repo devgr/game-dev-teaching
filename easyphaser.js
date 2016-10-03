@@ -90,6 +90,16 @@
 		}
 	};
 
+	var cameraSystem = {
+		centerOn: null, // sprite to follow with the camera
+		normalFollow: function(){
+			endCreates.push(function(){
+				game.camera.follow(cameraSystem.centerOn);
+			});
+		}
+		// TODO: add smooth follow algorithm
+	};
+
 	var helpers = {
 		figureOutPath: function(spriteName){
 
@@ -145,6 +155,7 @@
 			});
 
 			controlSystem.player = player;
+			cameraSystem.centerOn = player;
 			more.player = player;
 		});
 
@@ -236,11 +247,16 @@
 		});
 	}
 
+	function cameraFollowPlayer(){
+		cameraSystem.normalFollow();
+	}
+
 	window.player = makePlayerSprite;
 	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
 	window.gravity = enableGravity;
 	window.platform = addPlatformSprite;
+	window.coolcamera = cameraFollowPlayer;
 
 	if(window.level1 && typeof window.level1 === "function"){
 		try{
