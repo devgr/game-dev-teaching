@@ -1,4 +1,3 @@
-// TODO: start and finish
 // TODO: player carry box
 // TODO: show text
 // TODO: show text at finish
@@ -312,8 +311,8 @@
 			},
 			message: function(text, x, y){
 				more.messageText = text;
-				more.messageX = x;
-				more.messageY = y;
+				more.messageX = x !== undefined ? x : more.messageX;
+				more.messageY = y !== undefined ? y : more.messageY;
 				return more;
 			}
 		};
@@ -327,9 +326,9 @@
 			}
 		});
 		creates.push(function(){
-			var helperSprite = game.add.sprite(helperSpriteName, x, y);
+			var helperSprite = game.add.sprite(x, y, helperSpriteName);
 			game.physics.arcade.enable(helperSprite);
-			helperSprite.body.setSize(optSize, optSize, x - (optSize / 2), y - (optSize / 2));
+			helperSprite.body.setSize(optSize, optSize, -optSize / 2, -optSize / 2);
 			more.sprite = helperSprite;
 		});
 
