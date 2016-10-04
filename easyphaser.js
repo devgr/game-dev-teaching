@@ -9,6 +9,7 @@
 	var screenHeight = 320;
 
 	var preloads = [];
+	var earlyCreates = [];
 	var creates = [];
 	var endCreates = [];
 	var afterCreates = [];
@@ -231,7 +232,7 @@
 				preloadedNames[spriteName] = true;
 			}
 		});
-		creates.push(function(){
+		earlyCreates.push(function(){
 			var sprite = game.add.sprite(optX || 0, optY || 0, spriteName);
 			sprite.anchor.setTo(0.5, 0.5);
 		});
@@ -399,7 +400,10 @@
 
 		game.physics.startSystem(Phaser.Physics.ARCADE); // always need physics
 
-		for(var i = 0, len = creates.length; i < len; i++){
+		for(var i = 0, len = earlyCreates.length; i < len; i++){
+			earlyCreates[i]();
+		}
+		for(i = 0, len = creates.length; i < len; i++){
 			creates[i]();
 		}
 		for(i = 0, len = endCreates.length; i < len; i++){
