@@ -1,4 +1,3 @@
-// TODO: player carry box
 // TODO: show text
 // TODO: show text at finish
 // TODO: smooth camera follow
@@ -170,6 +169,20 @@
 			enableFlying: function(){ 
 				controlSystem.flyingEnabled = true;
 				return more;
+			},
+			add: function(spriteName, optX, optY){
+				preloads.push(function(){
+					if(!preloadedNames[spriteName]){
+						game.load.image(spriteName, helpers.figureOutPath(spriteName));
+						preloadedNames[spriteName] = true;
+					}
+				});
+				endCreates.push(function(){
+					var sprite = game.make.sprite(optX || 0, optY || 0, spriteName);
+					sprite.anchor.setTo(0.5, 0.5);
+					more.player.addChild(sprite);
+				});
+				return more;
 			}
 		};
 
@@ -311,8 +324,8 @@
 			},
 			message: function(text, x, y){
 				more.messageText = text;
-				more.messageX = x !== undefined ? x : more.messageX;
-				more.messageY = y !== undefined ? y : more.messageY;
+				if(x !== undefined){more.messageX = x;}
+				if(y !== undefined){more.messageY = y;}
 				return more;
 			}
 		};
