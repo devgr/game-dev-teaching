@@ -10,4 +10,5 @@ function level1(){
 	coolcamera();
 	start(-100, -200);
 	finish(100, 0, 50).debug().message('yay!');
+	text('Rocket Delivery', 300, 25);
 }

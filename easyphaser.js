@@ -1,5 +1,3 @@
-// TODO: show text
-// TODO: show text at finish
 // TODO: smooth camera follow
 // TODO: parallax effect for background
 (function(){
@@ -361,6 +359,14 @@
 		return more;
 	}
 
+	function displayDebugText(message, optX, optY){
+		if(optX === undefined){optX = 25;}
+		if(optY === undefined){optY = 25;}
+		renders.push(function(){
+			game.debug.text(message, optX, optY);
+		});
+	}
+
 	window.player = makePlayerSprite;
 	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
@@ -369,6 +375,7 @@
 	window.coolcamera = cameraFollowPlayer;
 	window.start = setStartLocation;
 	window.finish = setFinishBox;
+	window.text = displayDebugText;
 
 	if(window.level1 && typeof window.level1 === "function"){
 		try{
