@@ -1,5 +1,4 @@
 // TODO: smooth camera follow
-// TODO: parallax effect for background
 // TODO: custom updates
 // TODO: multiple levels
 // TODO: easy placing block sprites
@@ -17,7 +16,7 @@
 	var earlyCreates = [];
 	var creates = [];
 	var endCreates = [];
-	var afterCreates = [];
+	var firstUpdates = [];
 	var updates = [];
 	var renders = [];
 
@@ -46,18 +45,18 @@
 			if(this.jumpingEnabled){ // side scroller feel, very quick
 				body.gravity.y = 300;
 				body.drag = new Phaser.Point(300, 0);
-				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(200, 300);});
+				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(200, 300);});
 				this.xAccel = 30;
 				this.yAccel = 250;
 			} else if(this.flyingEnabled){ // slower, gravity based
 				body.gravity.y = 100;
 				body.drag = new Phaser.Point(50, 0);
-				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(250, 250);});
+				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(250, 250);});
 				this.xAccel = 4;
 				this.yAccel = 7;
 			} else{ // can move in all directions
 				body.drag = new Phaser.Point(500, 500);
-				afterCreates.push(function(){body.maxVelocity = new Phaser.Point(100, 100);});
+				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(100, 100);});
 				this.xAccel = 50;
 				this.yAccel = 50;
 			}
@@ -99,11 +98,68 @@
 	};
 
 	var cameraSystem = {
-		centerOn: null, // sprite to follow with the camera
+		player: null, // sprite to follow with the camera
+		modifyX: 0,
+		modifyY: 0,
+		playerInitX: 0,
+		playerInitY: 0,
+		cam: null,
+		initX: 0,
+		initY: 0,
+		bufferX: [],
+		bufferY: [],
+		bufferSize: 30,
+		bufferPosition: 0,
 		normalFollow: function(){
-			game.camera.follow(this.centerOn);
-		}
-		// TODO: add smooth follow algorithm
+			game.camera.follow(this.player);
+		},
+		setupSmoothFollow: function(){
+			endCreates.push(function(){
+				cameraSystem.cam = game.camera;
+			});
+			firstUpdates.push(function(){
+				cameraSystem.initializeBuffers();
+			});
+			updates.push(function(){
+				cameraSystem.update();
+			});
+		},
+		initializeBuffers: function(){
+			this.cam.x = this.player.x + 32 - screenWidth / 2; // TODO: remove the hardcoded 32
+			this.cam.y = this.player.y + 32 - screenHeight / 2;
+			this.initX = this.cam.x;
+			this.initY = this.cam.y;
+			for(var i = 0; i < this.bufferSize; i++){
+				this.bufferX.push(this.initX);
+				this.bufferY.push(this.initY);
+			}
+			this.modifyX = screenWidth / 2;
+			this.modifyY = screenHeight / 2;
+			this.playerInitX = this.player.x;
+			this.playerInitY = this.player.y;
+		},
+		update: function(){
+			var buffX = this.bufferX;
+			var buffY = this.bufferY;
+			var len = this.bufferSize;
+			buffX[this.bufferPosition] = this.player.x - this.modifyX;
+			buffY[this.bufferPosition] = this.player.y - this.modifyY;
+
+			this.bufferPosition++;
+			if(this.bufferPosition === len){
+				this.bufferPosition = 0;
+			}
+
+			// calculate averages 
+			var totalX = 0;
+			var totalY = 0;
+			for(var i = 0; i < len; i++){
+				totalX += buffX[i];
+				totalY += buffY[i];
+			}
+			this.cam.x = totalX / len;
+			this.cam.y = totalY / len;
+		},
 	};
 
 	var spawnSystem = {
@@ -209,7 +265,7 @@
 
 			spawnSystem.player = player;
 			controlSystem.player = player;
-			cameraSystem.centerOn = player;
+			cameraSystem.player = player;
 			overlapSystem.player = player;
 			more.player = player;
 		});
@@ -328,10 +384,14 @@
 		});
 	}
 
-	function cameraFollowPlayer(){
+	function simpleCameraFollow(){
 		endCreates.push(function(){
 			cameraSystem.normalFollow();
 		});
+	}
+
+	function smoothCameraFollow(){
+		cameraSystem.setupSmoothFollow();
 	}
 
 	function setStartLocation(x, y){
@@ -404,7 +464,8 @@
 	window.arrowkeys = useArrowKeys;
 	window.gravity = enableGravity;
 	window.platform = addPlatformSprite;
-	window.coolcamera = cameraFollowPlayer;
+	window.followcamera = simpleCameraFollow;
+	window.smoothcamera = smoothCameraFollow;
 	window.start = setStartLocation;
 	window.finish = setFinishBox;
 	window.text = displayDebugText;
@@ -441,17 +502,20 @@
 			endCreates[i]();
 		}
 
-		afterCreates.push(function(){spawnSystem.movePlayer();}); // always have to start the player at the right spot
+		firstUpdates.unshift(function(){spawnSystem.movePlayer();}); // always have to start the player at the right spot
+	}
 
-		window.setTimeout(afterCreate, 0);
-	}
-	function afterCreate(){
-		for(var i = 0, len = afterCreates.length; i < len; i++){
-			afterCreates[i]();
-		}
-	}
+	var isFirstFrame = true; // I don't like this, but it works.
 	function update(){
-		for(var i = 0, len = updates.length; i < len; i++){
+		var i, len;
+		if(isFirstFrame){
+			for(i = 0, len = firstUpdates.length; i < len; i++){
+				firstUpdates[i]();
+			}
+			isFirstFrame = false;
+		}
+
+		for(i = 0, len = updates.length; i < len; i++){
 			updates[i]();
 		}
 	}
