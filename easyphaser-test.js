@@ -14,5 +14,6 @@ function level1(){
 }
 
 function level2(){
-
+	background('#884455');
+	platform('floating_platform', 80, 36, 0, 125).animation(10);
 }

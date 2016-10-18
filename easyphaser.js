@@ -464,10 +464,10 @@
 
 					// load the next level
 					if(more.nextLevelNumber && game.state.states['level'+more.nextLevelNumber]){
-						game.state.start('level'+more.nextLevelNumber);
+						game.state.start('level'+more.nextLevelNumber, true, false);
 					}
 				}
-			});
+			}, null, game);
 		});
 
 		return more;
