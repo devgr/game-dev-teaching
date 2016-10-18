@@ -9,7 +9,7 @@ function level1(){
 	platform('floating_platform', 80, 36, 100, 50).animation(10);
 	smoothcamera();
 	start(-100, -200);
-	finish(100, 0, 50).debug().message('yay!');
+	finish(100, 0, 50).debug().message('yay!').next(2);
 	text('Rocket Delivery', 300, 25);
 }
 

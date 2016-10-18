@@ -382,7 +382,9 @@
 	}
 
 	function enableGravity(){
-		controlSystem.flyingEnabled = true;
+		currentLevel.earlyCreates.push(function(){
+			controlSystem.flyingEnabled = true;
+		});
 		currentLevel.endCreates.push(function(){
 			for(var i = 0, len = currentLevel.usesGravity.length; i < len; i++){
 				currentLevel.usesGravity[i].body.gravity.y = 100;
@@ -397,13 +399,17 @@
 	}
 
 	function smoothCameraFollow(){
-		cameraSystem.setupSmoothFollow();
+		currentLevel.earlyCreates.push(function(){
+			cameraSystem.setupSmoothFollow();
+		});
 	}
 
 	function setStartLocation(x, y){
-		spawnSystem.forSure = true;
-		spawnSystem.startX = x;
-		spawnSystem.startY = y;
+		currentLevel.earlyCreates.push(function(){
+			spawnSystem.forSure = true;
+			spawnSystem.startX = x;
+			spawnSystem.startY = y;
+		});
 	}
 
 	function setFinishBox(x, y, optSize){
@@ -412,7 +418,7 @@
 			messageText: '!',
 			messageX: 25,
 			messageY: 25,
-			nextLevelNumber: 1,
+			nextLevelNumber: null,
 			debug: function(){
 				currentLevel.renders.push(function(){
 					game.debug.body(more.sprite);
@@ -455,6 +461,11 @@
 					currentLevel.renders.push(function(){
 						game.debug.text(more.messageText, more.messageX, more.messageY);
 					});
+
+					// load the next level
+					if(more.nextLevelNumber && game.state.states['level'+more.nextLevelNumber]){
+						game.state.start('level'+more.nextLevelNumber);
+					}
 				}
 			});
 		});
@@ -544,7 +555,17 @@
 			try{
 				currentLevel = new Level();
 				levels.push(currentLevel);
-				game.state.add('level'+count, {preload: preload, create: create, update: update, render: render});
+				game.state.add('level'+count, {
+					preload: (function(index){
+						return function(){
+							currentLevel = levels[index];
+							preload(); // call the actual preload function
+						};
+					})(count - 1), // I hate javascript
+					create: create, 
+					update: update, 
+					render: render
+				});
 
 				window['level'+count]();
 
@@ -556,7 +577,6 @@
 		}
 
 		if(count > 1){ // meaning, it successfully made at least one level
-			currentLevel = levels[0];
 			game.state.start('level1');
 		}
 
