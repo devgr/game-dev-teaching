@@ -1,5 +1,3 @@
-// TODO: multiple levels
-// TODO: easy placing block sprites
 // TODO: enemy walk back and forth
 // TODO: enemy fly and follow player
 // TODO: add more comments
@@ -265,6 +263,7 @@
 			cameraSystem.reset();
 			spawnSystem.reset();
 			overlapSystem.reset();
+			isFirstFrame = true;
 		}
 	};
 	
@@ -273,11 +272,15 @@
 		var more = {
 			player: null,
 			enableJumping: function(){
-				controlSystem.jumpingEnabled = true;
+				currentLevel.earlyCreates.push(function(){
+					controlSystem.jumpingEnabled = true;
+				});
 				return more;
 			},
 			enableFlying: function(){ 
-				controlSystem.flyingEnabled = true;
+				currentLevel.earlyCreates.push(function(){
+					controlSystem.flyingEnabled = true;
+				});
 				return more;
 			},
 			add: function(spriteName, optX, optY){
@@ -530,6 +533,29 @@
 		currentLevel.userUpdates.push(userCallback);
 	}
 
+	function addBlockSprite(spriteName, x, y){ // TODO: allow blocks of sizes other than 32
+		// x and y are in big 32 pixel coordinates
+		if(!helpers.isString(spriteName)){return {};}
+		x = x * 32;
+		y = y * 32;
+		currentLevel.preloads.push(function(){
+			if(!currentLevel.preloadedNames[spriteName]){
+				game.load.image(spriteName, helpers.figureOutPath(spriteName));
+				currentLevel.preloadedNames[spriteName] = true;
+			}
+		});
+		currentLevel.creates.push(function(){
+			if(!controlSystem.platformGroup){
+				controlSystem.platformGroup = game.add.physicsGroup();
+				currentLevel.endCreates.push(function(){
+					controlSystem.platformGroup.setAll('body.immovable', true);
+				});
+			}
+			var sprite = controlSystem.platformGroup.create(x, y, spriteName);
+			sprite.anchor.setTo(0.5, 0.5);
+		});
+	}
+
 	window.player = makePlayerSprite;
 	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
@@ -541,6 +567,7 @@
 	window.finish = setFinishBox;
 	window.text = displayDebugText;
 	window.update = customUpdate;
+	window.block = addBlockSprite;
 
 	function preload(){
 		for(var i = 0, len = currentLevel.preloads.length; i < len; i++){
