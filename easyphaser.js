@@ -37,6 +37,16 @@
 		xAccel: 0,
 		yAccel: 0,
 
+		reset: function(){
+			this.inputs = {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}};
+			this.player = null;
+			this.platformGroup = null;
+			this.flyingEnabled = false;
+			this.jumpingEnabled = false;
+			this.xAccel = 0;
+			this.yAccel = 0;
+		},
+
 		listenToArrowKeys: function(){
 			this.inputs.up = game.input.keyboard.addKey(Phaser.Keyboard.UP);
 			this.inputs.down = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
@@ -115,6 +125,22 @@
 		bufferY: [],
 		bufferSize: 30,
 		bufferPosition: 0,
+
+		reset: function(){
+			this.player = null;
+			this.modifyX = 0;
+			this.modifyY = 0;
+			this.playerInitX = 0;
+			this.playerInitY = 0;
+			this.cam = null;
+			this.initX = 0;
+			this.initY = 0;
+			this.bufferX = [];
+			this.bufferY = [];
+			this.bufferSize = 30;
+			this.bufferPosition = 0;
+		},
+
 		normalFollow: function(){
 			game.camera.follow(this.player);
 		},
@@ -173,6 +199,12 @@
 		startY: 0,
 		forSure: false, // location set from start function has priority over player function
 		player: null,
+		reset: function(){
+			this.startX = 0;
+			this.startY = 0;
+			this.forSure = false;
+			this.player = null;
+		},
 		movePlayer: function(){
 			if(this.player){
 				this.player.x = this.startX;
@@ -186,6 +218,12 @@
 		player: null,
 		overlaps: [],
 		initialized: false,
+
+		reset: function(){
+			this.player = null;
+			this.overlaps = [];
+			this.initialized = false;
+		},
 		initialize: function(){
 			if(!this.initialized){
 				currentLevel.updates.push(function(){
@@ -220,6 +258,13 @@
 				return true;
 			}
 			return false; // TODO: Display some sort of useful error
+		},
+
+		resetEverything: function(){
+			controlSystem.reset();
+			cameraSystem.reset();
+			spawnSystem.reset();
+			overlapSystem.reset();
 		}
 	};
 	
@@ -549,6 +594,7 @@
 	// ----- MAIN -------
 	(function main(){
 		game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, '');
+		window.game = game;
 
 		var count = 1;
 		while(window['level'+count] && typeof window['level'+count] === "function"){
@@ -559,6 +605,9 @@
 					preload: (function(index){
 						return function(){
 							currentLevel = levels[index];
+							if(index > 0){ // TODO: fix this so that it can work when going back to level 1
+								helpers.resetEverything();
+							}
 							preload(); // call the actual preload function
 						};
 					})(count - 1), // I hate javascript

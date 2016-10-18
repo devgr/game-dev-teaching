@@ -15,5 +15,7 @@ function level1(){
 
 function level2(){
 	background('#884455');
+	background('clouds2').depth(2);
+	player('rocketman', 64, 64).add('box', 24, -18);
 	platform('floating_platform', 80, 36, 0, 125).animation(10);
 }
