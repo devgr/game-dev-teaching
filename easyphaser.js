@@ -2,6 +2,8 @@
 // TODO: easy placing block sprites
 // TODO: enemy walk back and forth
 // TODO: enemy fly and follow player
+// TODO: add more comments
+// TODO: write documentation
 (function(){
 	'use strict';
 	var game;
@@ -10,17 +12,21 @@
 	var screenWidth = 480;
 	var screenHeight = 320;
 
-	var preloads = [];
-	var earlyCreates = [];
-	var creates = [];
-	var endCreates = [];
-	var firstUpdates = [];
-	var updates = [];
-	var userUpdates = [];
-	var renders = [];
+	function Level(){
+		this.preloads = [];
+		this.earlyCreates = [];
+		this.creates = [];
+		this.endCreates = [];
+		this.firstUpdates = [];
+		this.updates = [];
+		this.userUpdates = [];
+		this.renders = [];
+		this.usesGravity = [];
+		this.preloadedNames = {};
+	}
+	var currentLevel;
+	var levels = [];
 
-	var usesGravity = [];
-	var preloadedNames = {};
 
 	var controlSystem = {
 		inputs: {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}}, // dummy initial values
@@ -44,18 +50,18 @@
 			if(this.jumpingEnabled){ // side scroller feel, very quick
 				body.gravity.y = 300;
 				body.drag = new Phaser.Point(300, 0);
-				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(200, 300);});
+				currentLevel.firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(200, 300);});
 				this.xAccel = 30;
 				this.yAccel = 250;
 			} else if(this.flyingEnabled){ // slower, gravity based
 				body.gravity.y = 100;
 				body.drag = new Phaser.Point(50, 0);
-				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(250, 250);});
+				currentLevel.firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(250, 250);});
 				this.xAccel = 4;
 				this.yAccel = 7;
 			} else{ // can move in all directions
 				body.drag = new Phaser.Point(500, 500);
-				firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(100, 100);});
+				currentLevel.firstUpdates.push(function(){body.maxVelocity = new Phaser.Point(100, 100);});
 				this.xAccel = 50;
 				this.yAccel = 50;
 			}
@@ -113,13 +119,13 @@
 			game.camera.follow(this.player);
 		},
 		setupSmoothFollow: function(){
-			endCreates.push(function(){
+			currentLevel.endCreates.push(function(){
 				cameraSystem.cam = game.camera;
 			});
-			firstUpdates.push(function(){
+			currentLevel.firstUpdates.push(function(){
 				cameraSystem.initializeBuffers();
 			});
-			updates.push(function(){
+			currentLevel.updates.push(function(){
 				cameraSystem.update();
 			});
 		},
@@ -182,7 +188,7 @@
 		initialized: false,
 		initialize: function(){
 			if(!this.initialized){
-				updates.push(function(){
+				currentLevel.updates.push(function(){
 					overlapSystem.update();
 				});
 				this.initialized = true;
@@ -230,13 +236,13 @@
 				return more;
 			},
 			add: function(spriteName, optX, optY){
-				preloads.push(function(){
-					if(!preloadedNames[spriteName]){
+				currentLevel.preloads.push(function(){
+					if(!currentLevel.preloadedNames[spriteName]){
 						game.load.image(spriteName, helpers.figureOutPath(spriteName));
-						preloadedNames[spriteName] = true;
+						currentLevel.preloadedNames[spriteName] = true;
 					}
 				});
-				endCreates.push(function(){
+				currentLevel.endCreates.push(function(){
 					var sprite = game.make.sprite(optX || 0, optY || 0, spriteName);
 					sprite.anchor.setTo(0.5, 0.5);
 					more.player.addChild(sprite);
@@ -245,13 +251,13 @@
 			}
 		};
 
-		preloads.push(function(){
-			if(!preloadedNames[spriteName]){
+		currentLevel.preloads.push(function(){
+			if(!currentLevel.preloadedNames[spriteName]){
 				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
-				preloadedNames[spriteName] = true;
+				currentLevel.preloadedNames[spriteName] = true;
 			}
 		});
-		creates.push(function(){
+		currentLevel.creates.push(function(){
 			var player = game.add.sprite(optX || 0, optY || 0, spriteName);
 			player.anchor.setTo(0.5, 0.5);
 			game.physics.arcade.enable(player); // enable physics and drag
@@ -281,7 +287,7 @@
 		}
 	}
 	function setBackgroundColor(colorValue){
-		creates.push(function(){
+		currentLevel.creates.push(function(){
 			game.stage.backgroundColor = colorValue;
 		});
 		return {};
@@ -295,25 +301,26 @@
 			initCamY: 0,
 			depth: function(ammount){
 				// Parallax effect
-				endCreates.push(function(){
+				currentLevel.endCreates.push(function(){
 					// got to get the initial camera position. Probably 0,0 but just to be sure
 					more.initCamX = game.camera.x;
 					more.initCamY = game.camera.y;
 				});
-				updates.push(function(){
+				currentLevel.updates.push(function(){
 			        more.sprite.x = (game.camera.x - more.initCamX) / ammount + more.initX;
 			        more.sprite.y = (game.camera.y - more.initCamY) / ammount + more.initY;
 				});
+				return more;
 			}
 		};
 
-		preloads.push(function(){
-			if(!preloadedNames[spriteName]){
+		currentLevel.preloads.push(function(){
+			if(!currentLevel.preloadedNames[spriteName]){
 				game.load.image(spriteName, helpers.figureOutPath(spriteName));
-				preloadedNames[spriteName] = true;
+				currentLevel.preloadedNames[spriteName] = true;
 			}
 		});
-		earlyCreates.push(function(){
+		currentLevel.earlyCreates.push(function(){
 			var sprite = game.add.sprite(optX || 0, optY || 0, spriteName);
 			sprite.anchor.setTo(0.5, 0.5);
 			more.sprite = sprite;
@@ -332,7 +339,7 @@
 				optFramesPerSecond = optFramesPerSecond ? optFramesPerSecond : 15;
 				optIsLoop = optIsLoop === undefined ? true : !!optIsLoop; // isn't javascript great?...
 				optAnimationName = optAnimationName ? optAnimationName : 'anim1';
-				endCreates.push(function(){
+				currentLevel.endCreates.push(function(){
 					more.sprite.animations.add(optAnimationName);
 					more.sprite.animations.play(optAnimationName, optFramesPerSecond, optIsLoop);
 				});
@@ -341,16 +348,16 @@
 			// TODO: Add the ability to have multiple animations and to switch between them
 		};
 
-		preloads.push(function(){
-			if(!preloadedNames[spriteName]){
+		currentLevel.preloads.push(function(){
+			if(!currentLevel.preloadedNames[spriteName]){
 				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
-				preloadedNames[spriteName] = true;
+				currentLevel.preloadedNames[spriteName] = true;
 			}
 		});
-		creates.push(function(){
+		currentLevel.creates.push(function(){
 			if(!controlSystem.platformGroup){
 				controlSystem.platformGroup = game.add.physicsGroup();
-				endCreates.push(function(){
+				currentLevel.endCreates.push(function(){
 					controlSystem.platformGroup.setAll('body.immovable', true);
 				});
 			}
@@ -363,28 +370,28 @@
 	}
 
 	function useArrowKeys(){
-		creates.push(function(){
+		currentLevel.creates.push(function(){
 			controlSystem.listenToArrowKeys();
 		});
-		updates.push(function(){
+		currentLevel.updates.push(function(){
 			controlSystem.update(); // wrapped in a function so that update has the right context
 		});
-		endCreates.push(function(){
+		currentLevel.endCreates.push(function(){
 			controlSystem.setSpeeds();
 		});
 	}
 
 	function enableGravity(){
 		controlSystem.flyingEnabled = true;
-		endCreates.push(function(){
-			for(var i = 0, len = usesGravity.length; i < len; i++){
-				usesGravity[i].body.gravity.y = 100;
+		currentLevel.endCreates.push(function(){
+			for(var i = 0, len = currentLevel.usesGravity.length; i < len; i++){
+				currentLevel.usesGravity[i].body.gravity.y = 100;
 			}
 		});
 	}
 
 	function simpleCameraFollow(){
-		endCreates.push(function(){
+		currentLevel.endCreates.push(function(){
 			cameraSystem.normalFollow();
 		});
 	}
@@ -405,8 +412,9 @@
 			messageText: '!',
 			messageX: 25,
 			messageY: 25,
+			nextLevelNumber: 1,
 			debug: function(){
-				renders.push(function(){
+				currentLevel.renders.push(function(){
 					game.debug.body(more.sprite);
 				});
 				return more;
@@ -416,18 +424,22 @@
 				if(x !== undefined){more.messageX = x;}
 				if(y !== undefined){more.messageY = y;}
 				return more;
+			},
+			next: function(levelNumber){
+				more.nextLevelNumber = levelNumber;
+				return more;
 			}
 		};
 
 		optSize = optSize ? optSize : 10;
 		var helperSpriteName = 'empty';
-		preloads.push(function(){
-			if(!preloadedNames.empty){
+		currentLevel.preloads.push(function(){
+			if(!currentLevel.preloadedNames.empty){
 				game.load.image(helperSpriteName, helpers.figureOutPath(helperSpriteName));
-				preloadedNames.empty = true;
+				currentLevel.preloadedNames.empty = true;
 			}
 		});
-		creates.push(function(){
+		currentLevel.creates.push(function(){
 			var helperSprite = game.add.sprite(x, y, helperSpriteName);
 			game.physics.arcade.enable(helperSprite);
 			helperSprite.body.setSize(optSize, optSize, -optSize / 2, -optSize / 2);
@@ -440,7 +452,7 @@
 			game.physics.arcade.overlap(player, more.sprite, function(){
 				if(!youGotThere){
 					youGotThere = true;
-					renders.push(function(){
+					currentLevel.renders.push(function(){
 						game.debug.text(more.messageText, more.messageX, more.messageY);
 					});
 				}
@@ -453,13 +465,13 @@
 	function displayDebugText(message, optX, optY){
 		if(optX === undefined){optX = 25;}
 		if(optY === undefined){optY = 25;}
-		renders.push(function(){
+		currentLevel.renders.push(function(){
 			game.debug.text(message, optX, optY);
 		});
 	}
 
 	function customUpdate(userCallback){
-		userUpdates.push(userCallback);
+		currentLevel.userUpdates.push(userCallback);
 	}
 
 	window.player = makePlayerSprite;
@@ -474,19 +486,9 @@
 	window.text = displayDebugText;
 	window.update = customUpdate;
 
-	if(window.level1 && typeof window.level1 === "function"){
-		try{
-			window.level1();
-		} catch(e){
-			console.log(e);
-		}
-	}
-
-	game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
-
 	function preload(){
-		for(var i = 0, len = preloads.length; i < len; i++){
-			preloads[i]();
+		for(var i = 0, len = currentLevel.preloads.length; i < len; i++){
+			currentLevel.preloads[i]();
 		}
 	}
 	function create(){
@@ -496,39 +498,68 @@
 
 		game.physics.startSystem(Phaser.Physics.ARCADE); // always need physics
 
-		for(var i = 0, len = earlyCreates.length; i < len; i++){
-			earlyCreates[i]();
+		for(var i = 0, len = currentLevel.earlyCreates.length; i < len; i++){
+			currentLevel.earlyCreates[i]();
 		}
-		for(i = 0, len = creates.length; i < len; i++){
-			creates[i]();
+		for(i = 0, len = currentLevel.creates.length; i < len; i++){
+			currentLevel.creates[i]();
 		}
-		for(i = 0, len = endCreates.length; i < len; i++){
-			endCreates[i]();
+		for(i = 0, len = currentLevel.endCreates.length; i < len; i++){
+			currentLevel.endCreates[i]();
 		}
 
-		firstUpdates.unshift(function(){spawnSystem.movePlayer();}); // always have to start the player at the right spot
+		currentLevel.firstUpdates.unshift(function(){spawnSystem.movePlayer();}); // always have to start the player at the right spot
 	}
 
 	var isFirstFrame = true; // I don't like this, but it works.
 	function update(){
 		var i, len;
 		if(isFirstFrame){
-			for(i = 0, len = firstUpdates.length; i < len; i++){
-				firstUpdates[i]();
+			for(i = 0, len = currentLevel.firstUpdates.length; i < len; i++){
+				currentLevel.firstUpdates[i]();
 			}
 			isFirstFrame = false;
 		}
 
-		for(i = 0, len = updates.length; i < len; i++){
-			updates[i]();
+		for(i = 0, len = currentLevel.updates.length; i < len; i++){
+			currentLevel.updates[i]();
 		}
-		for(i = 0, len = userUpdates.length; i < len; i++){
-			userUpdates[i](game, controlSystem.player); // user updates get some parameters to work with
+		for(i = 0, len = currentLevel.userUpdates.length; i < len; i++){
+			currentLevel.userUpdates[i](game, controlSystem.player); // user currentLevel.updates get some parameters to work with
 		}
 	}
 	function render(){
-		for(var i = 0, len = renders.length; i < len; i++){
-			renders[i]();
+		for(var i = 0, len = currentLevel.renders.length; i < len; i++){
+			currentLevel.renders[i]();
 		}
 	}
+
+
+	// ----- MAIN -------
+	(function main(){
+		game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, '');
+
+		var count = 1;
+		while(window['level'+count] && typeof window['level'+count] === "function"){
+			try{
+				currentLevel = new Level();
+				levels.push(currentLevel);
+				game.state.add('level'+count, {preload: preload, create: create, update: update, render: render});
+
+				window['level'+count]();
+
+			} catch(e){
+				console.log(e);
+			} finally{
+				count++;
+			}
+		}
+
+		if(count > 1){ // meaning, it successfully made at least one level
+			currentLevel = levels[0];
+			game.state.start('level1');
+		}
+
+	})();
+
 })();
