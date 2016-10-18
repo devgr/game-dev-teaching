@@ -14,15 +14,9 @@ function level1(){
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+}
+
+function level2(){
 	
 	
 	
