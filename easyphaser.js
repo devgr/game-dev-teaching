@@ -1,5 +1,10 @@
 // TODO: smooth camera follow
 // TODO: parallax effect for background
+// TODO: custom updates
+// TODO: multiple levels
+// TODO: easy placing block sprites
+// TODO: enemy walk back and forth
+// TODO: enemy fly and follow player
 (function(){
 	'use strict';
 	var game;
@@ -215,17 +220,38 @@
 	function addBackground(spriteName, optX, optY){
 		if(!helpers.isString(spriteName)){return {};}
 		if(spriteName[0] === '#' && (spriteName.length === 4 || spriteName.length === 7)){
-			setBackgroundColor(spriteName);
+			return setBackgroundColor(spriteName);
 		} else{
-			addBackgroundSprite(spriteName, optX, optY);
+			return addBackgroundSprite(spriteName, optX, optY);
 		}
 	}
 	function setBackgroundColor(colorValue){
 		creates.push(function(){
 			game.stage.backgroundColor = colorValue;
 		});
+		return {};
 	}
 	function addBackgroundSprite(spriteName, optX, optY){
+		var more = {
+			sprite: null,
+			initX: 0,
+			initY: 0,
+			initCamX: 0,
+			initCamY: 0,
+			depth: function(ammount){
+				// Parallax effect
+				endCreates.push(function(){
+					// got to get the initial camera position. Probably 0,0 but just to be sure
+					more.initCamX = game.camera.x;
+					more.initCamY = game.camera.y;
+				});
+				updates.push(function(){
+			        more.sprite.x = (game.camera.x - more.initCamX) / ammount + more.initX;
+			        more.sprite.y = (game.camera.y - more.initCamY) / ammount + more.initY;
+				});
+			}
+		};
+
 		preloads.push(function(){
 			if(!preloadedNames[spriteName]){
 				game.load.image(spriteName, helpers.figureOutPath(spriteName));
@@ -235,7 +261,12 @@
 		earlyCreates.push(function(){
 			var sprite = game.add.sprite(optX || 0, optY || 0, spriteName);
 			sprite.anchor.setTo(0.5, 0.5);
+			more.sprite = sprite;
+			more.initX = sprite.x;
+			more.initY = sprite.y;
 		});
+
+		return more;
 	}
 
 	function addPlatformSprite(spriteName, spriteWidth, spriteHeight, optX, optY){
