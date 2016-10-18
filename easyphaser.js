@@ -1,5 +1,3 @@
-// TODO: smooth camera follow
-// TODO: custom updates
 // TODO: multiple levels
 // TODO: easy placing block sprites
 // TODO: enemy walk back and forth
@@ -18,6 +16,7 @@
 	var endCreates = [];
 	var firstUpdates = [];
 	var updates = [];
+	var userUpdates = [];
 	var renders = [];
 
 	var usesGravity = [];
@@ -459,6 +458,10 @@
 		});
 	}
 
+	function customUpdate(userCallback){
+		userUpdates.push(userCallback);
+	}
+
 	window.player = makePlayerSprite;
 	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
@@ -469,6 +472,7 @@
 	window.start = setStartLocation;
 	window.finish = setFinishBox;
 	window.text = displayDebugText;
+	window.update = customUpdate;
 
 	if(window.level1 && typeof window.level1 === "function"){
 		try{
@@ -517,6 +521,9 @@
 
 		for(i = 0, len = updates.length; i < len; i++){
 			updates[i]();
+		}
+		for(i = 0, len = userUpdates.length; i < len; i++){
+			userUpdates[i](game, controlSystem.player); // user updates get some parameters to work with
 		}
 	}
 	function render(){
