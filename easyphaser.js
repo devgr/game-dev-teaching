@@ -240,13 +240,22 @@
 
 	var helpers = {
 		figureOutPath: function(spriteName, optExtension){
+			return this.addDefaultPath(this.addExtension(spriteName, optExtension));
+		},
+
+		addExtension: function(spriteName, optExtension){
 			optExtension = optExtension || spriteExt;
 
 			var hasExtension = spriteName.lastIndexOf('.') > 0;
-			var hasSlash = spriteName.indexOf('/') !== -1;
 			if(!hasExtension){
 				spriteName = spriteName + optExtension;
 			}
+
+			return spriteName;
+		},
+
+		addDefaultPath: function(spriteName){
+			var hasSlash = spriteName.indexOf('/') !== -1;
 			if(!hasSlash){
 				spriteName = spritePath + spriteName;
 			}
@@ -271,8 +280,8 @@
 		ezHash: function(str){ // http://stackoverflow.com/a/7616484/3768518
 			var hash = 0, i, chr, len;
 			if (str.length === 0) return '0';
-			for (i = 0, len = this.length; i < len; i++) {
-				chr   = this.charCodeAt(i);
+			for (i = 0, len = str.length; i < len; i++) {
+				chr   = str.charCodeAt(i);
 				hash  = ((hash << 5) - hash) + chr;
 				hash |= 0; // Convert to 32bit integer
 			}
@@ -569,7 +578,9 @@
 		});
 	}
 
-	function createTilemap(jsonFileNameOrObject, optImageNames){
+	function createTilemap(jsonFileNameOrObject, optImageNames, optLayerNames){
+
+		// preload the json file and image files
 		var jsonName;
 		if(typeof jsonFileNameOrObject === 'string'){
 			currentLevel.preloads.push(function(){
@@ -585,31 +596,45 @@
 					game.load.tilemap(jsonName, null, jsonFileNameOrObject, Phaser.Tilemap.TILED_JSON);
 				}
 			});
-		}
+		} else {return;}
+
 
 		if(optImageNames === undefined){
-			optImageNames = jsonFileNameOrObject;
-
-			currentLevel.preloads.push(function(){
-				if(!currentLevel.preloadedTilemapNames[optImageNames]){
-					game.load.image(optImageNames, helpers.figureOutPath(optImageNames));
-				}
-			});
+			optImageNames = [jsonFileNameOrObject];
 		} else if(typeof optImageNames === 'string'){
-			currentLevel.preloads.push(function(){
-				if(!currentLevel.preloadedTilemapNames[optImageNames]){
-					game.load.image(optImageNames, helpers.figureOutPath(optImageNames));
-				}
-			});
-		} else if(typeof optImageNames === 'object' && optImageNames.length !== undefined){ // is array
+			optImageNames = [optImageNames];
+		} 
+
+		if(typeof optImageNames === 'object' && optImageNames.length !== undefined){ // is array
 			currentLevel.preloads.push(function(){
 				for(var i = 0, len = optImageNames.length; i < len; i++){
 					if(!currentLevel.preloadedTilemapNames[optImageNames[i]]){
+						optImageNames[i] = helpers.addExtension(optImageNames[i]); // needs extension because tilemapping tool
 						game.load.image(optImageNames[i], helpers.figureOutPath(optImageNames[i]));
 					}
 				}
 			});
-		}
+		} else {return;}
+
+		if(optLayerNames === undefined){
+			optLayerNames = ['world']; // default from riskylab.com/tilemap
+		} else if(typeof optLayerNames === 'string'){
+			optLayerNames = [optLayerNames];
+		} 
+
+		// create the map, add images, and create layers
+		currentLevel.creates.push(function(){
+			var map = game.add.tilemap(jsonName);
+
+			for(var i = 0, len = optImageNames.length; i < len; i++){
+				map.addTilesetImage(optImageNames[i], optImageNames[i]);
+			}
+
+			for(i = 0, len = optLayerNames.length; i < len; i++){
+				var layer = map.createLayer(optLayerNames[i]);
+				layer.resizeWorld();
+			}
+		});
 	}
 
 	window.player = makePlayerSprite;
