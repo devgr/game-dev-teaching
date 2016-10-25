@@ -20,7 +20,8 @@
 		this.userUpdates = [];
 		this.renders = [];
 		this.usesGravity = [];
-		this.preloadedNames = {};
+		this.preloadedSpriteNames = {};
+		this.preloadedTilemapNames = {};
 	}
 	var currentLevel;
 	var levels = [];
@@ -238,12 +239,13 @@
 	};
 
 	var helpers = {
-		figureOutPath: function(spriteName){
+		figureOutPath: function(spriteName, optExtension){
+			optExtension = optExtension || spriteExt;
 
 			var hasExtension = spriteName.lastIndexOf('.') > 0;
 			var hasSlash = spriteName.indexOf('/') !== -1;
 			if(!hasExtension){
-				spriteName = spriteName + spriteExt;
+				spriteName = spriteName + optExtension;
 			}
 			if(!hasSlash){
 				spriteName = spritePath + spriteName;
@@ -264,6 +266,17 @@
 			spawnSystem.reset();
 			overlapSystem.reset();
 			isFirstFrame = true;
+		},
+
+		ezHash: function(str){ // http://stackoverflow.com/a/7616484/3768518
+			var hash = 0, i, chr, len;
+			if (str.length === 0) return '0';
+			for (i = 0, len = this.length; i < len; i++) {
+				chr   = this.charCodeAt(i);
+				hash  = ((hash << 5) - hash) + chr;
+				hash |= 0; // Convert to 32bit integer
+			}
+			return hash.toString();
 		}
 	};
 	
@@ -285,9 +298,9 @@
 			},
 			add: function(spriteName, optX, optY){
 				currentLevel.preloads.push(function(){
-					if(!currentLevel.preloadedNames[spriteName]){
+					if(!currentLevel.preloadedSpriteNames[spriteName]){
 						game.load.image(spriteName, helpers.figureOutPath(spriteName));
-						currentLevel.preloadedNames[spriteName] = true;
+						currentLevel.preloadedSpriteNames[spriteName] = true;
 					}
 				});
 				currentLevel.endCreates.push(function(){
@@ -300,9 +313,9 @@
 		};
 
 		currentLevel.preloads.push(function(){
-			if(!currentLevel.preloadedNames[spriteName]){
+			if(!currentLevel.preloadedSpriteNames[spriteName]){
 				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
-				currentLevel.preloadedNames[spriteName] = true;
+				currentLevel.preloadedSpriteNames[spriteName] = true;
 			}
 		});
 		currentLevel.creates.push(function(){
@@ -363,9 +376,9 @@
 		};
 
 		currentLevel.preloads.push(function(){
-			if(!currentLevel.preloadedNames[spriteName]){
+			if(!currentLevel.preloadedSpriteNames[spriteName]){
 				game.load.image(spriteName, helpers.figureOutPath(spriteName));
-				currentLevel.preloadedNames[spriteName] = true;
+				currentLevel.preloadedSpriteNames[spriteName] = true;
 			}
 		});
 		currentLevel.earlyCreates.push(function(){
@@ -397,9 +410,9 @@
 		};
 
 		currentLevel.preloads.push(function(){
-			if(!currentLevel.preloadedNames[spriteName]){
+			if(!currentLevel.preloadedSpriteNames[spriteName]){
 				game.load.spritesheet(spriteName, helpers.figureOutPath(spriteName), spriteWidth, spriteHeight);
-				currentLevel.preloadedNames[spriteName] = true;
+				currentLevel.preloadedSpriteNames[spriteName] = true;
 			}
 		});
 		currentLevel.creates.push(function(){
@@ -488,9 +501,9 @@
 		optSize = optSize ? optSize : 10;
 		var helperSpriteName = 'empty';
 		currentLevel.preloads.push(function(){
-			if(!currentLevel.preloadedNames.empty){
+			if(!currentLevel.preloadedSpriteNames.empty){
 				game.load.image(helperSpriteName, helpers.figureOutPath(helperSpriteName));
-				currentLevel.preloadedNames.empty = true;
+				currentLevel.preloadedSpriteNames.empty = true;
 			}
 		});
 		currentLevel.creates.push(function(){
@@ -539,9 +552,9 @@
 		x = x * 32;
 		y = y * 32;
 		currentLevel.preloads.push(function(){
-			if(!currentLevel.preloadedNames[spriteName]){
+			if(!currentLevel.preloadedSpriteNames[spriteName]){
 				game.load.image(spriteName, helpers.figureOutPath(spriteName));
-				currentLevel.preloadedNames[spriteName] = true;
+				currentLevel.preloadedSpriteNames[spriteName] = true;
 			}
 		});
 		currentLevel.creates.push(function(){
@@ -556,6 +569,49 @@
 		});
 	}
 
+	function createTilemap(jsonFileNameOrObject, optImageNames){
+		var jsonName;
+		if(typeof jsonFileNameOrObject === 'string'){
+			currentLevel.preloads.push(function(){
+				jsonName = jsonFileNameOrObject;
+				if(!currentLevel.preloadedTilemapNames[jsonName]){
+					game.load.tilemap(jsonName, helpers.figureOutPath(jsonName, '.json'), null, Phaser.Tilemap.TILED_JSON);
+				}
+			});
+		} else if(typeof jsonFileNameOrObject === 'object'){
+			currentLevel.preloads.push(function(){
+				jsonName = helpers.ezHash(JSON.stringify(jsonFileNameOrObject));
+				if(!currentLevel.preloadedTilemapNames[jsonName]){
+					game.load.tilemap(jsonName, null, jsonFileNameOrObject, Phaser.Tilemap.TILED_JSON);
+				}
+			});
+		}
+
+		if(optImageNames === undefined){
+			optImageNames = jsonFileNameOrObject;
+
+			currentLevel.preloads.push(function(){
+				if(!currentLevel.preloadedTilemapNames[optImageNames]){
+					game.load.image(optImageNames, helpers.figureOutPath(optImageNames));
+				}
+			});
+		} else if(typeof optImageNames === 'string'){
+			currentLevel.preloads.push(function(){
+				if(!currentLevel.preloadedTilemapNames[optImageNames]){
+					game.load.image(optImageNames, helpers.figureOutPath(optImageNames));
+				}
+			});
+		} else if(typeof optImageNames === 'object' && optImageNames.length !== undefined){ // is array
+			currentLevel.preloads.push(function(){
+				for(var i = 0, len = optImageNames.length; i < len; i++){
+					if(!currentLevel.preloadedTilemapNames[optImageNames[i]]){
+						game.load.image(optImageNames[i], helpers.figureOutPath(optImageNames[i]));
+					}
+				}
+			});
+		}
+	}
+
 	window.player = makePlayerSprite;
 	window.background = addBackground;
 	window.arrowkeys = useArrowKeys;
@@ -568,6 +624,7 @@
 	window.text = displayDebugText;
 	window.update = customUpdate;
 	window.block = addBlockSprite;
+	window.tilemap = createTilemap;
 
 	function preload(){
 		for(var i = 0, len = currentLevel.preloads.length; i < len; i++){
@@ -643,7 +700,7 @@
 					render: render
 				});
 
-				window['level'+count]();
+				window['level'+count](); // actually call the level1, level2, etc functions
 
 			} catch(e){
 				console.log(e);
