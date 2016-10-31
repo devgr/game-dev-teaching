@@ -1,6 +1,7 @@
 function level1(){
-	background('#2233aa');
-	tilemap('tilemap1', 'ss');
-	player('rocketman', 64, 64).enableJumping();
+	background('#88aaff');
+	tilemap('tiled', 'ss');
+	player('rocketman', 64, 64);
 	arrowkeys();
+	followcamera();
 }

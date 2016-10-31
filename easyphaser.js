@@ -30,7 +30,8 @@
 	var controlSystem = {
 		inputs: {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}}, // dummy initial values
 		player: null,
-		platformGroup: null, // for checking colisions
+		platformGroup: null, // for checking collisions
+		mapLayer: null,
 		flyingEnabled: false, 
 		jumpingEnabled: false,
 		xAccel: 0,
@@ -40,6 +41,7 @@
 			this.inputs = {up: {isDown: null}, down: {isDown: null}, left: {isDown: null}, right: {isDown: null}};
 			this.player = null;
 			this.platformGroup = null;
+			this.mapLayer = null;
 			this.flyingEnabled = false;
 			this.jumpingEnabled = false;
 			this.xAccel = 0;
@@ -80,6 +82,10 @@
 
 			if(this.platformGroup){
 				game.physics.arcade.collide(this.player, this.platformGroup);
+			}
+
+			if(this.mapLayer){
+				game.physics.arcade.collide(this.player, this.mapLayer);
 			}
 
 			var inputs = this.inputs;
@@ -626,6 +632,7 @@
 		currentLevel.creates.push(function(){
 			var map = game.add.tilemap(jsonName);
 
+
 			for(var i = 0, len = optImageNames.length; i < len; i++){
 				map.addTilesetImage(optImageNames[i], optImageNames[i]);
 			}
@@ -633,7 +640,9 @@
 			for(i = 0, len = optLayerNames.length; i < len; i++){
 				var layer = map.createLayer(optLayerNames[i]);
 				layer.resizeWorld();
+				controlSystem.mapLayer = layer;
 			}
+			map.setCollisionByExclusion([1]);
 		});
 	}
 
