@@ -637,12 +637,18 @@
 				map.addTilesetImage(optImageNames[i], optImageNames[i]);
 			}
 
+			var layer = null;
 			for(i = 0, len = optLayerNames.length; i < len; i++){
-				var layer = map.createLayer(optLayerNames[i]);
+				layer = map.createLayer(optLayerNames[i]);
+			}
+
+			// Set up collision on everying in the last layer.
+			// TODO: make layer collision configurable
+			if(layer){
 				layer.resizeWorld();
+				map.setCollisionByExclusion([1], true, layer);
 				controlSystem.mapLayer = layer;
 			}
-			map.setCollisionByExclusion([1]);
 		});
 	}
 
