@@ -2,37 +2,38 @@
 
 	var config = {
 		templateNames: ['Mario', 'Minecraft', 'Maze'],
-		templates:[{
-			name: 'Mario',
-			tileset: 'mariotiles',
-			player: {
-				sprite: 'mario',
-				width: 16,
-				height: 16
-			},
-			useGravity: true,
-			background: '#88aaff'
-		}, {
-			name: 'Minecraft',
-			tileset: 'minecrafttiles',
-			player: {
-				sprite: 'steve',
-				width: 64,
-				height: 64
-			},
-			useGravity: true,
-			background: '#88aaff'
-		}, {
-			name: 'Maze',
-			tileset: 'mazetiles',
-			player: {
-				sprite: 'ball',
-				width: 64,
-				height: 64
-			},
-			useGravity: false,
-			background: '#444455'
-		}]
+		templates:{
+			Mario:{
+				tileset: 'mariotiles',
+				player: {
+					sprite: 'mario',
+					width: 32,
+					height: 43
+				},
+				useGravity: true,
+				background: '#88aaff'
+			}, 
+			Minecraft:{
+				tileset: 'minecrafttiles',
+				player: {
+					sprite: 'steve',
+					width: 32,
+					height: 64
+				},
+				useGravity: true,
+				background: '#88aaff'
+			}, 
+			Maze:{
+				tileset: 'mazetiles',
+				player: {
+					sprite: 'ball',
+					width: 32,
+					height: 32
+				},
+				useGravity: false,
+				background: '#444455'
+			}
+		}
 	};
 
 	var app = new Vue({
@@ -71,6 +72,8 @@
 						playerObj.enableJumping();
 					}
 				};
+
+				destroygame();
 				loadgame();
 			},
 		}

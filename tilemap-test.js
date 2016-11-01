@@ -1,7 +1,8 @@
 function level1(){
 	background('#88aaff');
-	tilemap('tiled', 'ss');
-	player('rocketman', 64, 64);
+	tilemap('mariosample', 'mariotiles');
+	var playerObj = player('mario', 32, 43);
 	arrowkeys();
 	followcamera();
+
 }

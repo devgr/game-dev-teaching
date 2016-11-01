@@ -4,7 +4,7 @@
 // TODO: write documentation
 (function(){
 	'use strict';
-	var game;
+	var game = null;
 	var spritePath = './sprites/';
 	var spriteExt = '.png';
 	var screenWidth = 480;
@@ -646,7 +646,7 @@
 			// TODO: make layer collision configurable
 			if(layer){
 				layer.resizeWorld();
-				map.setCollisionByExclusion([1], true, layer);
+				map.setCollisionByExclusion([], true, layer);
 				controlSystem.mapLayer = layer;
 			}
 		});
@@ -760,5 +760,16 @@
 	}
 	// otherwise just wait for main to be called
 	window.loadgame = main;
+
+	function destroyGameAndElement(){
+		if(game !== null){
+			game.destroy();
+			game = null;
+			levels = [];
+			helpers.resetEverything();
+		}
+	}
+
+	window.destroygame = destroyGameAndElement;
 
 })();
