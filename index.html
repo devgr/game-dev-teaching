@@ -2,20 +2,38 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Rocket Delivery</title>
+        <title>Game Creator</title>
         <link rel="icon" type="image/png" href="favicon.png">
 
         <script src="lib/vue.js"></script>
+        <script src="lib/vue-resource.js"></script>
 
         <script src="lib/phaser.js"></script>
         <script src="lib/phaser-arcade-physics.js"></script>
-        <script src="tilemap-test.js"></script>
 		<script src="easyphaser.js"></script>
     </head>
     <body>
         <div id="game"></div>
+
+
         <div id="app">
-            {{ message }}
+            <template v-for="gameTemplate in gameTemplates">
+                <input type="radio" v-bind:id="gameTemplate + 'Radio'" v-bind:value="gameTemplate" v-model="selectedTemplate">
+                <label v-bind:for="gameTemplate + 'Radio'">{{gameTemplate}}</label>
+            </template>
+            <!-- <input type="radio" id="minecraftRadio" value="Minecraft" v-model="character">
+            <label for="minecraftRadio">Minecraft</label>
+            <input type="radio" id="mazeRadio" value="Maze" v-model="character">
+            <label for="minecraftRadio">Maze</label> -->
+
+            <br />
+            <input id="jsonfile" type="file" v-on:change='filePicked' />
+            <label for="jsonfile">Upload the tilemap file</label>
+
+            <input v-model="firstName" placeholder="First Name">
+            <input v-model="lastName" placeholder="Last Name">
+
+            <button id='saveButton' v-on:click='saveForm'>Save</button>
         </div>
         <script src="gamecreator.js"></script>
     </body>
