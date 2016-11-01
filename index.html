@@ -4,12 +4,19 @@
         <meta charset="UTF-8" />
         <title>Rocket Delivery</title>
         <link rel="icon" type="image/png" href="favicon.png">
+
+        <script src="lib/vue.js"></script>
+
         <script src="lib/phaser.js"></script>
         <script src="lib/phaser-arcade-physics.js"></script>
         <script src="tilemap-test.js"></script>
 		<script src="easyphaser.js"></script>
     </head>
     <body>
-
+        <div id="game"></div>
+        <div id="app">
+            {{ message }}
+        </div>
+        <script src="gamecreator.js"></script>
     </body>
 </html>

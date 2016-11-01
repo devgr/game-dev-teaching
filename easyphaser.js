@@ -716,8 +716,8 @@
 
 
 	// ----- MAIN -------
-	(function main(){
-		game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, '');
+	function main(){
+		game = new Phaser.Game(screenWidth, screenHeight, Phaser.AUTO, 'game');
 		window.game = game;
 
 		var count = 1;
@@ -752,7 +752,13 @@
 		if(count > 1){ // meaning, it successfully made at least one level
 			game.state.start('level1');
 		}
+	}
 
-	})();
+	// if the game level definitions have already been loaded, then build the game
+	if(window.level1 && typeof window.level1 === "function"){
+		main();
+	}
+	// otherwise just wait for main to be called
+	window.loadgame = main;
 
 })();
