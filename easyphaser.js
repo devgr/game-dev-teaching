@@ -623,7 +623,7 @@
 		} else {return;}
 
 		if(optLayerNames === undefined){
-			optLayerNames = ['world']; // default from riskylab.com/tilemap
+			optLayerNames = ['background', 'world']; // default from riskylab.com/tilemap
 		} else if(typeof optLayerNames === 'string'){
 			optLayerNames = [optLayerNames];
 		} 
@@ -637,18 +637,21 @@
 				map.addTilesetImage(optImageNames[i], optImageNames[i]);
 			}
 
-			var layer = null;
+			var layers = [];
 			for(i = 0, len = optLayerNames.length; i < len; i++){
-				layer = map.createLayer(optLayerNames[i]);
+				layers.push(map.createLayer(optLayerNames[i]));
 			}
+
+			// Make background layer (layer 0) have a parallax effect // TODO: make configurable
+			layers[0].scrollFactorX = 0.5;
+			layers[0].scrollFactorY = 0.5;
 
 			// Set up collision on everying in the last layer.
 			// TODO: make layer collision configurable
-			if(layer){
-				layer.resizeWorld();
-				map.setCollisionByExclusion([], true, layer);
-				controlSystem.mapLayer = layer;
-			}
+			var lastLayer = layers[layers.length-1];
+			lastLayer.resizeWorld();
+			map.setCollisionByExclusion([], true, lastLayer);
+			controlSystem.mapLayer = lastLayer;
 		});
 	}
 
