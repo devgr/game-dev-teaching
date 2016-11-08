@@ -15,24 +15,29 @@
 		<script src="easyphaser.js"></script>
     </head>
     <body>
+        <a href="http://riskylab.com/tilemap" target="blank">Tilemap Editor</a>
         <div id="game"></div>
 
         <div id="app">
             <template v-for="gameTemplate in gameTemplates">
-                <input type="radio" v-bind:id="gameTemplate + 'Radio'" v-bind:value="gameTemplate" v-model="selectedTemplate">
-                <label v-bind:for="gameTemplate + 'Radio'">{{gameTemplate}}</label>
+                <a v-bind:href="'sprites/' + gameTemplate.tileset + '.png'" download>{{ gameTemplate.name }} Tiles</a>&nbsp;
+            </template>
+            <br />
+            <template v-for="gameTemplate in gameTemplates">
+                <input type="radio" v-bind:id="gameTemplate.name + 'Radio'" v-bind:value="gameTemplate.id" v-model="selectedTemplate">
+                <label v-bind:for="gameTemplate.name + 'Radio'">{{ gameTemplate.name }}</label>
             </template>
 
             <br />
-            <label for="jsonfile">Upload the tilemap file: </label>
+
+            <div v-for="tilemap in tilemaps">
+                Level {{ tilemap.id + 1 }}: {{ tilemap.name }}
+            </div>
             <input id="jsonfile" type="file" v-on:change='filePicked' />
+
             <br />
-            <label>Uploaded files:</label>
-            <ul id="uploadedFileNames">
-                <li v-for="tilemap in tilemaps">
-                    {{ tilemap.name }}
-                </li>
-            </ul>
+            <br />
+            <button v-on:click='buildGame'>Load Game!</button>
 
             <!-- <input v-model="firstName" placeholder="First Name">
             <input v-model="lastName" placeholder="Last Name">

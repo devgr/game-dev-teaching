@@ -1,9 +1,8 @@
 (function(){
 
 	var config = {
-		templateNames: ['Mario', 'Minecraft', 'Maze'],
-		templates:{
-			Mario:{
+		templates:[{
+				name: 'Mario',
 				tileset: 'mariotiles',
 				player: {
 					sprite: 'mario',
@@ -12,8 +11,8 @@
 				},
 				useGravity: true,
 				background: '#88aaff'
-			}, 
-			Minecraft:{
+			}, {
+				name: 'Minecraft',
 				tileset: 'minecrafttiles',
 				player: {
 					sprite: 'steve',
@@ -22,8 +21,8 @@
 				},
 				useGravity: true,
 				background: '#88aaff'
-			}, 
-			Maze:{
+			}, {
+				name: 'Maze',
 				tileset: 'mazetiles',
 				player: {
 					sprite: 'ball',
@@ -33,15 +32,20 @@
 				useGravity: false,
 				background: '#444455'
 			}
-		}
+		]
 	};
+
+	// set indexes
+	for(var i = 0; i < config.templates.length; i++){
+		config.templates[i].id = i;
+	}
 
 	var app = new Vue({
 		el: '#app',
 		data: {
 			message: 'app test',
-			gameTemplates: config.templateNames,
-			selectedTemplate: 'Minecraft',
+			gameTemplates: config.templates,
+			selectedTemplate: 1,
 			tilemaps: [],
 			firstName: '',
 			lastName: '',
@@ -51,41 +55,46 @@
 				var reader = new FileReader();
 				var file = event.target.files[0];
 
+				var index = this.tilemaps.length;
 				this.tilemaps.push({
+					id: index,
 					name: file.name,
 					json: null
 				});
-				var index = this.tilemaps.length - 1;
 
 				reader.readAsText(file);
 
 				var vue = this;
 				reader.onload = function(event){
 					vue.tilemaps[index].json = event.target.result;
-					vue.buildLevel();
 				};
 			},
 			saveForm: function(event){
 				// post to server
 			},
-			buildLevel: function(){
+			buildGame: function(){
 				var template = config.templates[this.selectedTemplate];
-				var tilemapObj = JSON.parse(this.tilemaps[0].json);
-
-				window.level1 = function(){
-					background(template.background);
-					tilemap(tilemapObj, template.tileset);
-					var playerObj = player(template.player.sprite, template.player.width, template.player.height);
-					arrowkeys();
-					followcamera();
-					if(template.useGravity){
-						playerObj.enableJumping();
-					}
-				};
+				
+				for(var i = 0; i < this.tilemaps.length; i++){
+					var tilemapObj = JSON.parse(this.tilemaps[i].json);
+					
+					window['level'+(i+1)] = (function(tilemapObj_){
+						return function(){
+							background(template.background);
+							tilemap(tilemapObj_, template.tileset);
+							var playerObj = player(template.player.sprite, template.player.width, template.player.height);
+							arrowkeys();
+							smoothcamera();
+							if(template.useGravity){
+								playerObj.enableJumping();
+							}
+						};
+					})(tilemapObj);
+				}
 
 				destroygame();
 				loadgame();
-			},
+			}
 		}
 	});
 
