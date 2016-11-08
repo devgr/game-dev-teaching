@@ -41,30 +41,40 @@
 		data: {
 			message: 'app test',
 			gameTemplates: config.templateNames,
-			selectedTemplate: 'Mario',
+			selectedTemplate: 'Minecraft',
+			tilemaps: [],
 			firstName: '',
 			lastName: '',
 		},
 		methods: {
 			filePicked: function(event){
 				var reader = new FileReader();
-				reader.readAsText(event.target.files[0]);
+				var file = event.target.files[0];
+
+				this.tilemaps.push({
+					name: file.name,
+					json: null
+				});
+				var index = this.tilemaps.length - 1;
+
+				reader.readAsText(file);
 
 				var vue = this;
 				reader.onload = function(event){
-					var tileJson = JSON.parse(event.target.result);
-					vue.buildLevel(tileJson, vue.selectedTemplate);
+					vue.tilemaps[index].json = event.target.result;
+					vue.buildLevel();
 				};
 			},
 			saveForm: function(event){
 				// post to server
 			},
-			buildLevel: function(tileJson, templateName){
-				var template = config.templates[templateName];
+			buildLevel: function(){
+				var template = config.templates[this.selectedTemplate];
+				var tilemapObj = JSON.parse(this.tilemaps[0].json);
 
 				window.level1 = function(){
 					background(template.background);
-					tilemap(tileJson, template.tileset);
+					tilemap(tilemapObj, template.tileset);
 					var playerObj = player(template.player.sprite, template.player.width, template.player.height);
 					arrowkeys();
 					followcamera();

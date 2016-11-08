@@ -24,9 +24,15 @@
             </template>
 
             <br />
+            <label for="jsonfile">Upload the tilemap file: </label>
             <input id="jsonfile" type="file" v-on:change='filePicked' />
-            <label for="jsonfile">Upload the tilemap file</label>
             <br />
+            <label>Uploaded files:</label>
+            <ul id="uploadedFileNames">
+                <li v-for="tilemap in tilemaps">
+                    {{ tilemap.name }}
+                </li>
+            </ul>
 
             <!-- <input v-model="firstName" placeholder="First Name">
             <input v-model="lastName" placeholder="Last Name">
