@@ -43,7 +43,6 @@
 	var app = new Vue({
 		el: '#app',
 		data: {
-			message: 'app test',
 			gameTemplates: config.templates,
 			selectedTemplate: 1,
 			levelData: [],
@@ -79,6 +78,23 @@
 			},
 			saveForm: function(event){
 				// post to server
+				body = {
+					selectedTemplate: this.selectedTemplate,
+					levelData: this.levelData,
+					firstName: this.firstName,
+					lastName: this.lastName,
+					startX: this.startX,
+					startY: this.startY,
+					finishX: this.finishX,
+					finishY: this.finishY,
+				};
+				this.$http.post('http://localhost/api', body).then(function(response){
+					// success
+					console.log('Saved');
+				}, function(error){
+					// something went wrong
+					console.log('Error when saving.');
+				});
 			},
 			buildGame: function(){
 				var template = config.templates[this.selectedTemplate];
