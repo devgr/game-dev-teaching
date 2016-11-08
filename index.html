@@ -29,11 +29,27 @@
             </template>
 
             <br />
+            <br />
 
-            <div v-for="tilemap in tilemaps">
-                Level {{ tilemap.id + 1 }}: {{ tilemap.name }}
-            </div>
+            <label for="startX">Start X:</label>
+            <input id="startX" v-model="startX" type="number" style="width:80px;" />
+            <label for="startY"> Start Y:</label>
+            <input id="startY" v-model="startY" type="number" style="width:80px;" />
+            <br />
+            <label for="finishX">Finish X:</label>
+            <input id="finishX" v-model="finishX" type="number" style="width:80px;" />
+            <label for="finishY"> Finish Y:</label>
+            <input id="finishY" v-model="finishY" type="number" style="width:80px;" />
+            <br />
+            <label for="jsonfile">Upload level file:</label>
             <input id="jsonfile" type="file" v-on:change='filePicked' />
+
+            <br />
+            <br />
+
+            <div v-for="level in levelData">
+                Level {{ level.id + 1 }}: {{ level.name }}
+            </div>
 
             <br />
             <br />

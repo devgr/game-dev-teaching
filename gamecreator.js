@@ -46,27 +46,35 @@
 			message: 'app test',
 			gameTemplates: config.templates,
 			selectedTemplate: 1,
-			tilemaps: [],
+			levelData: [],
 			firstName: '',
 			lastName: '',
+			startX: 50,
+			startY: 50,
+			finishX: 100,
+			finishY: 200
 		},
 		methods: {
 			filePicked: function(event){
 				var reader = new FileReader();
 				var file = event.target.files[0];
 
-				var index = this.tilemaps.length;
-				this.tilemaps.push({
+				var index = this.levelData.length;
+				this.levelData.push({
 					id: index,
 					name: file.name,
-					json: null
+					json: null,
+					startX: this.startX,
+					startY: this.startY,
+					finishX: this.finishX,
+					finishY: this.finishY,
 				});
 
 				reader.readAsText(file);
 
 				var vue = this;
 				reader.onload = function(event){
-					vue.tilemaps[index].json = event.target.result;
+					vue.levelData[index].json = event.target.result;
 				};
 			},
 			saveForm: function(event){
@@ -75,21 +83,24 @@
 			buildGame: function(){
 				var template = config.templates[this.selectedTemplate];
 				
-				for(var i = 0; i < this.tilemaps.length; i++){
-					var tilemapObj = JSON.parse(this.tilemaps[i].json);
+				for(var i = 0; i < this.levelData.length; i++){
+					var level = this.levelData[i];
 					
-					window['level'+(i+1)] = (function(tilemapObj_){
+					window['level'+(i+1)] = (function(lvl){
 						return function(){
+							var tilemapObj = JSON.parse(lvl.json);
 							background(template.background);
-							tilemap(tilemapObj_, template.tileset);
+							tilemap(tilemapObj, template.tileset);
 							var playerObj = player(template.player.sprite, template.player.width, template.player.height);
 							arrowkeys();
 							smoothcamera();
 							if(template.useGravity){
 								playerObj.enableJumping();
 							}
+							start(lvl.startX, lvl.startY);
+							finish(lvl.finishX, lvl.finishY, 50).message('').debug().next(lvl.id + 2);
 						};
-					})(tilemapObj);
+					})(level);
 				}
 
 				destroygame();
