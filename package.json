@@ -1,0 +1,23 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Backend API for the easyphaser game creator",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devgr/game-dev-teaching.git"
+  },
+  "author": "George Darling",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devgr/game-dev-teaching/issues"
+  },
+  "homepage": "https://github.com/devgr/game-dev-teaching#readme",
+  "dependencies": {
+    "express": "^4.14.0",
+    "mongodb": "^2.2.11"
+  }
+}
