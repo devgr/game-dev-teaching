@@ -1,5 +1,10 @@
 (function(){
 
+	var baseUrl = 'http://' + window.location.hostname;
+	if(baseUrl.indexOf('localhost') != -1){
+		baseUrl += ':3000';
+	}
+
 	var config = {
 		templates:[{
 				name: 'Mario',
@@ -51,7 +56,9 @@
 			startX: 50,
 			startY: 50,
 			finishX: 100,
-			finishY: 200
+			finishY: 200,
+			showSave: false,
+			saveMessage: '',
 		},
 		methods: {
 			filePicked: function(event){
@@ -88,12 +95,12 @@
 					finishX: this.finishX,
 					finishY: this.finishY,
 				};
-				this.$http.post('http://localhost/api', body).then(function(response){
+				this.$http.post(baseUrl+'/api/games', body).then(function(response){
 					// success
-					console.log('Saved');
+					this.saveMessage = 'Saved!';
 				}, function(error){
 					// something went wrong
-					console.log('Error when saving.');
+					this.saveMessage = 'Uh oh, not saved :(';
 				});
 			},
 			buildGame: function(){
@@ -121,9 +128,14 @@
 
 				destroygame();
 				loadgame();
+				this.showSave = true;
+			},
+			loadSaves: function(){
+				console.log('yep');
 			}
 		}
 	});
+	app.loadSaves();
 
  
 })();

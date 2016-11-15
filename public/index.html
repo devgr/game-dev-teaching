@@ -55,13 +55,16 @@
             <br />
             <button v-on:click='buildGame'>Load Game!</button>
 
-            <!-- <br />
             <br />
-            <input v-model="firstName" placeholder="First Name">
-            <input v-model="lastName" placeholder="Last Name">
             <br />
+            <div v-if='showSave'>
+                <input v-model="firstName" placeholder="First Name">
+                <input v-model="lastName" placeholder="Last Name">
+                <br />
 
-            <button id='saveButton' v-on:click='saveForm'>Save</button> -->
+                <button id='saveButton' v-on:click='saveForm'>Save</button>
+            </div>
+            <p>{{ saveMessage }}</p>
         </div>
         <script src="gamecreator.js"></script>
     </body>
