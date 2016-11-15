@@ -135,9 +135,8 @@
 			loadSaves: function(){
 				this.$http.get(baseUrl+'/api/games').then(function(response){
 					// success
-					data = JSON.parse(response);
-					console.log(date);
-					this.savedGames = data;
+					console.log(response.body);
+					this.savedGames = response.body;
 				}, function(error){
 					// something went wrong
 					console.log(error);
