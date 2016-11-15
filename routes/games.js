@@ -1,9 +1,19 @@
 var express = require('express');
+var dataAccess = require('../data_access/games');
 var router = express.Router();
 
-/* GET games listing. */
+// Get all of the game configurations
 router.get('/', function(req, res, next) {
-	res.send('respond with a resource');
+	dataAccess.getlist(function(docs){
+		res.json(docs);
+	});
+});
+
+// Create a new game configuration
+router.post('/', function(req, res){
+	dataAccess.create(req.body, function(result){
+		res.send('got it');
+	});
 });
 
 module.exports = router;
