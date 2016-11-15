@@ -59,6 +59,8 @@
 			finishY: 200,
 			showSave: false,
 			saveMessage: '',
+			savedGames: [],
+			selectedSavedGame: '',
 		},
 		methods: {
 			filePicked: function(event){
@@ -131,7 +133,38 @@
 				this.showSave = true;
 			},
 			loadSaves: function(){
-				console.log('yep');
+				this.$http.get(baseUrl+'/api/games').then(function(response){
+					// success
+					data = JSON.parse(response);
+					console.log(date);
+					this.savedGames = data;
+				}, function(error){
+					// something went wrong
+					console.log(error);
+				});
+			},
+			updateFormFromSelection: function(){
+				// use the selected saved game to fill in the rest of the form
+				// find the right save
+				var id = this.selectedSavedGame;
+				var arr = this.savedGames;
+				var savedGame;
+				for(var i = 0, len = arr.length; i < len; i++){
+					if(arr[i]._id === id){
+						savedGame = arr[i];
+						break;
+					}
+				}
+				if(!savedGame){return;}
+
+				this.selectedTemplate = savedGame.selectedTemplate;
+				this.levelData = savedGame.levelData;
+				this.firstName = savedGame.firstName;
+				this.lastName = savedGame.lastName;
+				this.startX = savedGame.startX;
+				this.startY = savedGame.startY;
+				this.finishX = savedGame.finishX;
+				this.finishY = savedGame.finishY;
 			}
 		}
 	});

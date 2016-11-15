@@ -23,6 +23,13 @@
                 <a v-bind:href="'sprites/' + gameTemplate.tileset + '.png'" download>{{ gameTemplate.name }} Tiles</a>&nbsp;
             </template>
             <br />
+            <label for="savedGamesDropdown">Load saved game: </label>
+            <select v-model="selectedSavedGame" v-on:change='updateFormFromSelection'>
+                <option v-for="save in savedGames" v-bind:value="save._id">
+                    {{ save.firstName }} {{  save.lastName }}
+                </option>
+            </select>
+            <br />
             <template v-for="gameTemplate in gameTemplates">
                 <input type="radio" v-bind:id="gameTemplate.name + 'Radio'" v-bind:value="gameTemplate.id" v-model="selectedTemplate">
                 <label v-bind:for="gameTemplate.name + 'Radio'">{{ gameTemplate.name }}</label>
