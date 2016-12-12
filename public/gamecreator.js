@@ -36,6 +36,26 @@
 				},
 				useGravity: false,
 				background: '#444455'
+			}, {
+				name: 'Extra',
+				tileset: 'extra',
+				player: {
+					sprite: 'steve',
+					width: 32,
+					height: 64
+				},
+				useGravity: true,
+				background: '#444455'
+			}, {
+				name: 'Robin',
+				tileset: 'minecrafttiles',
+				player: {
+					sprite: 'robin',
+					width: 389,
+					height: 262
+				},
+				useGravity: true,
+				background: '#444455'
 			}
 		]
 	};
@@ -115,7 +135,7 @@
 						return function(){
 							var tilemapObj = JSON.parse(lvl.json);
 							background(template.background);
-							tilemap(tilemapObj, template.tileset);
+							tilemap(tilemapObj, template.tileset, ['background', 'world']);
 							var playerObj = player(template.player.sprite, template.player.width, template.player.height);
 							arrowkeys();
 							smoothcamera();

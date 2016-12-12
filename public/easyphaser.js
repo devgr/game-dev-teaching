@@ -584,7 +584,7 @@
 		});
 	}
 
-	function createTilemap(jsonFileNameOrObject, optImageNames, optLayerNames){
+	function createTilemap(jsonFileNameOrObject, optImageNames, optLayerNames, optDepthLayers){
 
 		// preload the json file and image files
 		var jsonName;
